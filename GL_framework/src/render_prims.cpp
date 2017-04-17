@@ -7,8 +7,8 @@
 bool renderSphere = true;
 bool renderCapsule = false;
 bool renderParticles = false;
-bool renderCloth = true;
-
+bool renderCloth = false;
+bool renderCube = true;
 namespace Sphere {
 	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);
 	extern void cleanupSphere();
@@ -34,12 +34,36 @@ namespace ClothMesh {
 	extern void updateClothMesh(float* array_data);
 	extern void drawClothMesh();
 }
+namespace Cubo {
+	extern void cubeSetup(int num);
+	extern void cleanupClothMesh();
+	extern void updateCube(float* array_data);
+	extern void drawCube();
+	extern int numOfTriangleRender;
+}
 
 void setupPrims() {
 	Sphere::setupSphere();
 	Capsule::setupCapsule();
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
 	ClothMesh::setupClothMesh();
+	Cubo::cubeSetup(3);
+
+
+	glm::vec3* vertices = new glm::vec3[8];
+	vertices[0] = glm::vec3(-2, 3, 2);
+	vertices[1] = glm::vec3(2, 3, 2);
+	vertices[2] = glm::vec3(-2, 7, 2);
+	vertices[3] = glm::vec3(2, 7, 2);
+
+	vertices[4] = glm::vec3(-2, 3, -2);
+	vertices[5] = glm::vec3(2, 3, -2);
+	vertices[6] = glm::vec3(2, 7, -2);
+	vertices[7] = glm::vec3(-2, 7, -2);
+
+	Cubo::updateCube(&vertices[0].x);
+
+	delete vertices;
 }
 void cleanupPrims() {
 	Sphere::cleanupSphere();
@@ -60,4 +84,7 @@ void renderPrims() {
 	
 	if (renderCloth)
 		ClothMesh::drawClothMesh();
+
+	if (renderCube)
+		Cubo::drawCube();
 }
