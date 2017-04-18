@@ -826,7 +826,7 @@ namespace Cubo {
 	
 	//es un unico triangle strip
 	// se ha de pasar el array en un orden determinado
-	GLushort cubeIdx[] = {
+	GLubyte cubeIdx[] = {
 		/*3, 7, 6,
 		2,
 		1,
@@ -841,10 +841,12 @@ namespace Cubo {
 		1*/
 		//(5,6,1,2,3,6,7,5,4,1,0,3,4,7
 		//3, 2, 6, 7, 4, 2, 0, 3, 1, 6, 5, 4, 1, 0
-		0, 1, 4, 5, 6, 1, 3, 0, 2, 4, 7, 6, 2, 3, //cuadrados
-		0, 1, 3, 2,  //linea 1
+
+		//0, 1, 4, 5, 6, 1, 3, 0, 2, 4, 7, 6, 2, 3, //cuadrados // 14 numeros
+		  6, 7, 3, 2, 0, 7, 4, 6, 5, 3, 1, 0, 5, 4,
+		0, 1, 3, 2,  //linea 1 // 
 		4, 5, 6, 7, //linea 2
-		4, 0, 5, 1, 7, 2, 6, 3 //lineas 
+		4, 0,	 5, 1,	 7, 2,	 6, 3 //lineas 
 	};
 	
 	const char* cubo_vertexShader = 
@@ -874,7 +876,7 @@ namespace Cubo {
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeVbo[1]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 14, cubeIdx, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte)*30, cubeIdx, GL_STATIC_DRAW);
 
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -901,9 +903,6 @@ namespace Cubo {
 	void updateCube(float* array_data) {
 		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
 		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-		/*if (buff == NULL) {
-			buff = 0;
-		}*/
 		
 		for (int i = 0; i < 24; i++) {
 			buff[i] = array_data[i];
@@ -918,11 +917,11 @@ namespace Cubo {
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 
-		//glDrawElements(GL_TRIANGLE_STRIP, 14, GL_UNSIGNED_SHORT, 0);
+		glDrawElements(GL_TRIANGLE_STRIP, numOfTriangleRender, GL_UNSIGNED_BYTE, 0);
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.f, 0.f, 0.5f, 0.f);
-		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(14*sizeof(GLushort)));
-		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_SHORT, (GLvoid*)(18 * sizeof(GLushort)));
-		glDrawElements(GL_LINES, 8, GL_UNSIGNED_SHORT, (GLvoid*)(22 * sizeof(GLushort)));
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (GLvoid*)(14*sizeof(GLubyte)));
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (GLvoid*)(18 * sizeof(GLubyte)));
+		glDrawElements(GL_LINES, 8, GL_UNSIGNED_BYTE, (GLvoid*)(22 * sizeof(GLubyte)));
 		
 
 		glUseProgram(0);
