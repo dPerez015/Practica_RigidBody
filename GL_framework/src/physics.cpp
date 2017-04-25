@@ -1,11 +1,14 @@
 #include <imgui\imgui.h>
 #include <imgui\imgui_impl_glfw_gl3.h>
+#include <glm\gtc\type_ptr.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <cstdio>
 
 bool show_test_window = false;
 namespace Cubo {
-	extern void cubeSetup(int num);
+	extern void cubeSetup();
 	extern void cleanupClothMesh();
-	extern void updateCube(float* array_data);
+	extern void updateCube(const glm::mat4 &transform);
 	extern void drawCube();
 	extern int numOfTriangleRender;
 }
@@ -13,7 +16,6 @@ namespace Cubo {
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::DragInt("numero de triangulos", &Cubo::numOfTriangleRender, 0.05,3,14);
 		//TODO
 	}
 

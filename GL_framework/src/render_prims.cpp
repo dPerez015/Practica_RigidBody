@@ -4,7 +4,7 @@
 #include <cstdio>
 
 //Boolean variables allow to show/hide the primitives
-bool renderSphere = true;
+bool renderSphere = false;
 bool renderCapsule = false;
 bool renderParticles = false;
 bool renderCloth = false;
@@ -35,35 +35,28 @@ namespace ClothMesh {
 	extern void drawClothMesh();
 }
 namespace Cubo {
-	extern void cubeSetup(int num);
+	extern void cubeSetup();
 	extern void cleanupClothMesh();
-	extern void updateCube(float* array_data);
+	extern void updateCube(const glm::mat4& transform);
 	extern void drawCube();
 	extern int numOfTriangleRender;
 }
 
 void setupPrims() {
-	Sphere::setupSphere();
-	Capsule::setupCapsule();
+	//Sphere::setupSphere();
+	//Capsule::setupCapsule();
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
 	ClothMesh::setupClothMesh();
-	Cubo::cubeSetup(3);
+	Cubo::cubeSetup();
 
-
-	glm::vec3* vertices = new glm::vec3[8];
-	vertices[0] = glm::vec3(-2, 3, 2);
-	vertices[1] = glm::vec3(2, 3, 2);
-	vertices[2] = glm::vec3(-2, 7, 2);
-	vertices[3] = glm::vec3(2, 7, 2);
-
-	vertices[4] = glm::vec3(-2, 3, -2);
-	vertices[5] = glm::vec3(2, 3, -2);
-	vertices[6] = glm::vec3(2, 7, -2);
-	vertices[7] = glm::vec3(-2, 7, -2);
-
-	Cubo::updateCube(&vertices[0].x);
-
-	delete vertices;
+	glm::mat4 transform = {
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		2,4,-3,1
+	};
+	Cubo::updateCube(transform);
+	
 }
 void cleanupPrims() {
 	Sphere::cleanupSphere();

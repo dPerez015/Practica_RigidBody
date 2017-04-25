@@ -822,39 +822,46 @@ namespace Cubo {
 	GLuint cubeShaders[2];
 	GLuint cubeProgram;
 
-	int numOfTriangleRender;
+	glm::mat4 objMAt = glm::mat4(1.f);
+	float halfW=1;
 	
+	glm::vec3 vertices[] = {
+	 glm::vec3(-halfW, -halfW, halfW),
+	 glm::vec3(halfW, -halfW, halfW),
+	 glm::vec3(-halfW, halfW, halfW),
+	 glm::vec3(halfW, halfW, halfW),
+
+	 glm::vec3(-halfW, -halfW, -halfW),
+	 glm::vec3(halfW, -halfW, -halfW),
+	 glm::vec3(halfW, halfW, -halfW),
+	 glm::vec3(-halfW, halfW, -halfW),
+	};
+
 	//es un unico triangle strip
 	// se ha de pasar el array en un orden determinado
-	GLubyte cubeIdx[] = {
-		/*3, 7, 6,
-		2,
-		1,
-		3,
-		0,
-		7,
-		4,
-		6,
-		5,
-		1,
-		4,
-		1*/
-		//(5,6,1,2,3,6,7,5,4,1,0,3,4,7
-		//3, 2, 6, 7, 4, 2, 0, 3, 1, 6, 5, 4, 1, 0
+	//   7---------6
+	//  /|        /|
+	// / |       / |
+	//2---------3  |
+	//|  4------|--5
+	//| /       | /
+	//|/        |/
+	//0---------1
 
-		//0, 1, 4, 5, 6, 1, 3, 0, 2, 4, 7, 6, 2, 3, //cuadrados // 14 numeros
-		  6, 7, 3, 2, 0, 7, 4, 6, 5, 3, 1, 0, 5, 4,
+	GLubyte cubeIdx[] = {
+		6, 7, 3, 2, 0, 7, 4, 6, 5, 3, 1, 0, 5, 4, //cuadrados // 14 numeros
 		0, 1, 3, 2,  //linea 1 // 
 		4, 5, 6, 7, //linea 2
 		4, 0,	 5, 1,	 7, 2,	 6, 3 //lineas 
 	};
 	
-	const char* cubo_vertexShader = 
-	"#version 330\n\
+	const char* cubo_vertexShader =
+		"#version 330\n\
 		in vec3 in_Position;\n\
 		uniform mat4 mvpMat;\n\
+		uniform mat4 objMAt;\n\
 		void main() {\n\
-		gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
+		gl_Position = mvpMat * objMAt* vec4(in_Position, 1.0);\n\
 		}";
 	const char* cubo_fragShader =
 	"#version 330\n\
@@ -864,14 +871,13 @@ namespace Cubo {
 		out_Color = color;\n\
 		}";
 
-	void cubeSetup(int num) {
-		numOfTriangleRender = num;
+	void cubeSetup() {
 		glGenVertexArrays(1, &cubeVao);
 		glBindVertexArray(cubeVao);
 		glGenBuffers(2, cubeVbo);
 
 		glBindBuffer(GL_ARRAY_BUFFER,cubeVbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, 0, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, vertices, GL_DYNAMIC_DRAW);
 		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(0);
 
@@ -900,24 +906,18 @@ namespace Cubo {
 		glDeleteShader(cubeShaders[0]);
 		glDeleteShader(cubeShaders[0]);
 	}
-	void updateCube(float* array_data) {
-		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
-		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-		
-		for (int i = 0; i < 24; i++) {
-			buff[i] = array_data[i];
-		}
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	void updateCube(const glm::mat4& transform ) {
+		objMAt = transform;
 	}
 	void drawCube() {
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMAt"), 1, GL_FALSE,glm::value_ptr(objMAt));
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 
-		glDrawElements(GL_TRIANGLE_STRIP, numOfTriangleRender, GL_UNSIGNED_BYTE, 0);
+		glDrawElements(GL_TRIANGLE_STRIP, 14, GL_UNSIGNED_BYTE, 0);
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.f, 0.f, 0.5f, 0.f);
 		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (GLvoid*)(14*sizeof(GLubyte)));
 		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_BYTE, (GLvoid*)(18 * sizeof(GLubyte)));
