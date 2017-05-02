@@ -13,6 +13,31 @@ namespace Cubo {
 	extern int numOfTriangleRender;
 }
 
+
+class Cubo{
+public:
+	Cubo() {
+	
+	}
+	~Cubo() {
+	
+	}
+
+	glm::vec3 position;
+	glm::vec3 linearSpeed;
+	//su direccion es el eje de rotacion y su modulo la velocidad
+	glm::vec3 angularSpeed;
+
+	glm::vec3 TotalForce;
+	
+
+
+	glm::quat rotation;
+	glm::mat4 InertiaTenBody;
+	glm::mat4 InertiaTen;
+};
+
+
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
