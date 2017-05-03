@@ -39,7 +39,6 @@ namespace Cubo {
 	extern void cleanupClothMesh();
 	extern void updateCube(const glm::mat4& transform);
 	extern void drawCube();
-	extern int numOfTriangleRender;
 }
 
 void setupPrims() {

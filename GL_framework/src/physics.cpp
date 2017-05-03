@@ -10,31 +10,56 @@ namespace Cubo {
 	extern void cleanupClothMesh();
 	extern void updateCube(const glm::mat4 &transform);
 	extern void drawCube();
-	extern int numOfTriangleRender;
+	extern float halfW;
 }
 
 
-class Cubo{
+class Cube{
 public:
-	Cubo() {
-	
-	}
-	~Cubo() {
-	
+	Cube() {
+		size = Cubo::halfW * 2;
+		mass = 1;
+		InertiaTensorBody[0] = glm::vec3((1/12)*mass*(pow(size, 2)*2),0,0);
+		InertiaTensorBody[1] = glm::vec3(0,(1 / 12)*mass*(pow(size, 2) * 2),0);
+		InertiaTensorBody[2] = glm::vec3(0,0,(1 / 12)*mass*(pow(height, 2) + pow(width, 2)));
+
+		randomPosMaxPos = vec3(5-sqrt(3*pow());
+		reStart();
+
 	}
 
+	void reStart() {
+	
+	
+	}
+	~Cube() {
+	
+	}
+	//dimensiones
+	float size;
+	float mass;
+
+	//parametros extra
+	glm::vec3 randomPosMaxPos, randomPosMinPos;
+	float time;
+
+	//fuerzas
+	glm::vec3 forces[8];
+	glm::vec3 totalForce;
+	glm::vec3 totalTorque;
+	glm::vec3 linearMomentum;
+	glm::vec3 angularMomentum;
+
+	//translacion
 	glm::vec3 position;
 	glm::vec3 linearSpeed;
+
+	//rotación
 	//su direccion es el eje de rotacion y su modulo la velocidad
 	glm::vec3 angularSpeed;
-
-	glm::vec3 TotalForce;
-	
-
-
 	glm::quat rotation;
-	glm::mat4 InertiaTenBody;
-	glm::mat4 InertiaTen;
+	glm::mat3 InertiaTensorBody;
+	glm::mat3 InertiaTensor;
 };
 
 
