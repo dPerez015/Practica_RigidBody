@@ -209,7 +209,7 @@ public:
 		}
 	}
 	
-	float findCollTime(float& dt, int& planeNumber) {
+	float findCollTime(float& dt, int& planeNumber, int& vertexNumber) {
 		bool resultFound=false;
 		int i = 1;
 		colDt = dt/2;
@@ -235,64 +235,44 @@ public:
 			tmpModel = glm::translate(glm::mat4(), position) * glm::mat4(mat3_cast(rotation));
 
 			//movemos los vertices
-			bool aCollHappened = false;
-			bool CollHappened[8] = {
-				false,false,false,false,false,false,false,false
-			};
 			
-			for (int j = 0; j < 8;j++) {
-				tmpVertex[j] = tmpModel*glm::vec4(originalVertex[i], 1.f);
-				//comprovamos si ha colisionado (solo con el plano que nos interesa)
+			tmpVertex = tmpModel*glm::vec4(originalVertex[planeNumber], 1.f);
 
-				if (checkWallRelativeDist(tmpVertex[j], planeNormal[planeNumber], planeD[planeNumber])!=relativePositions[planeNumber][j]) {
-					CollHappened[j] = true;
-					aCollHappened = true;
-				}
+			//comprobamos si el resultado nos sirve como aproximacion
+			if (abs(distancePointPlane(tmpVertex, planeNormal[planeNumber], planeD[planeNumber])) <= accuracity) {
+				resultFound = true;
 			}
-			//si ha habido colision comprobamos si el tiempo nos sirve como resultado
-			if (aCollHappened) {
-				float maxDistance=0;
-				float newDistance;
-				for (int j = 0; j < 8;j++ ) {
-					if (CollHappened[j]) {
-						newDistance = distancePointPlane(tmpVertex[j], planeNormal[planeNumber], planeD[planeNumber]);
-						if (newDistance > maxDistance)maxDistance = newDistance;
-					}
-				}
-				if (maxDistance <= accuracity) { resultFound=true; }
-			}
-			else {
-				float minDistance = distancePointPlane(tmpVertex[0], planeNormal[planeNumber], planeD[planeNumber]);
-				float newDistance;
-				for (int j = 1; j < 8; j++) {
-						newDistance = distancePointPlane(tmpVertex[j], planeNormal[planeNumber], planeD[planeNumber]);
-						if (newDistance > minDistance)minDistance = newDistance;
-				}
-				if (minDistance <= accuracity) {
-					resultFound = true;
-				}
-			
-			}
+	
 			//si no nos sirve hacemos el siguiente paso
-			if (!resultFound && aCollHappened) {
-				colDt -= dt / (2 * pow(2, i));
+			if (!resultFound ) {
+				if (checkWallRelativeDist(tmpVertex, planeNormal[planeNumber], planeD[planeNumber]) != relativePositions[planeNumber][vertexNumber]) {
+					colDt -= dt / (2 * pow(2, i));
+				}
+				else {
+					colDt += dt / (2 * pow(2, i));
+				}
+				
 			}
-			else if (!resultFound) {
-				colDt += dt / (2 * pow(2, i));
-			}
-
 			i++;
 		}
 
+		return colDt;
+
 	}
 
-	void applyColl(float& dt, int& planeNumber) {
+	void continueUpdate(float dt) {
 		
+	}
+
+	void applyColl(float& dt, int& planeNumber, int& pointNumber) {
+		float contDt = dt - findCollTime(dt, planeNumber, pointNumber);
+		
+		continueUpdate(contDt);
 	}
 
 	void checkWallColl(int& i, int& j, glm::vec3 &normal, float d, float& dt) {
 		if (checkWallRelativeDist(vertex[i], normal, d)!=relativePositions[j][i]) {
-			applyColl(dt, j);
+			applyColl(dt, j, i);
 		}
 	
 	}
@@ -347,7 +327,7 @@ public:
 	bool relativePositions[6][8];
 	glm::vec3 originalVertex[8];
 	glm::vec3 vertex[8];
-	glm::vec3 tmpVertex[8];
+	glm::vec3 tmpVertex;
 	float accuracity;
 	float maxNumOfIterations;
 
