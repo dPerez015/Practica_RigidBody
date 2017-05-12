@@ -65,12 +65,12 @@ public:
 		//maximo tamaño de la fuerza
 		MaxForceApplied = 10;
 
-		maxTime = 5;
+		maxTime = 10;
 		time = maxTime + 1;
 		
-
-		maxNumOfIterations = 10;
-		accuracity = 0.001;
+		coefficientOfRestitution = 0.8;
+		maxNumOfIterations = 30;
+		accuracity = 0.0001;
 
 		//guardar los puntos originales
 
@@ -173,7 +173,8 @@ public:
 		//orientacion
 		rotation +=dt* (1.f/2)*(glm::quat(0,angularSpeed)*rotation);
 
-		
+		calculateTransformMat();
+
 		//checkear las colisiones
 		checkCollisions(dt);
 
@@ -210,6 +211,7 @@ public:
 	}
 	
 	float findCollTime(float& dt, int& planeNumber, int& vertexNumber) {
+		time -= dt;
 		bool resultFound=false;
 		int i = 1;
 		colDt = dt/2;
@@ -232,14 +234,15 @@ public:
 
 			//hacemos la matriz de transformacion para estos datos
 			
-			tmpModel = glm::translate(glm::mat4(), position) * glm::mat4(mat3_cast(rotation));
+			tmpModel = glm::translate(glm::mat4(), tmpPosition) * glm::mat4(mat3_cast(tmpRotation));
 
 			//movemos los vertices
 			
-			tmpVertex = tmpModel*glm::vec4(originalVertex[planeNumber], 1.f);
+			tmpVertex = tmpModel*glm::vec4(originalVertex[vertexNumber], 1.f);
 
 			//comprobamos si el resultado nos sirve como aproximacion
-			if (abs(distancePointPlane(tmpVertex, planeNormal[planeNumber], planeD[planeNumber])) <= accuracity) {
+			float distance= distancePointPlane(tmpVertex, planeNormal[planeNumber], planeD[planeNumber]);
+			if (distance < accuracity && distance>0) {
 				resultFound = true;
 			}
 	
@@ -256,25 +259,81 @@ public:
 			i++;
 		}
 
+		time += colDt;
 		return colDt;
 
 	}
 
-	void continueUpdate(float dt) {
+	void makeImpulse(int& numPlane, int& numVertex) {
+		objectVelocity = linearSpeed + (glm::cross(angularMomentum, vertex[numVertex] - position));
+		vRel = glm::dot(planeNormal[numPlane], objectVelocity);
+
+		float j = -(1 + coefficientOfRestitution)*vRel / ((1 / mass) + (glm::dot(planeNormal[numPlane], glm::cross(InertiaTensor*glm::cross((vertex[numVertex] - position), planeNormal[numPlane]), (vertex[numVertex] - position)))));
+		Impulse = planeNormal[numPlane] * j;
+		torque = glm::cross((vertex[numVertex] - position),Impulse);
+		linearMomentum += Impulse;
+		angularMomentum = torque;
+	}
+	void actualizeParams() {
+		linearMomentum = tmpLinearMomentum;
+		linearSpeed = tmpLinearSpeed;
+		position = tmpPosition;
+		InertiaTensor = tmpInertiaTensor;
+		angularSpeed = tmpAngularSpeed;
+		rotation = tmpRotation;
 		
+		calculateTransformMat();
+	}
+
+	void continueUpdate(float dt) {
+		//Guardar datos del paso anterior
+
+		lastLinearMomentum = linearMomentum;
+		lastLinearSpeed = linearSpeed;
+		lastPosition = position;
+		lastInertiaTensor = InertiaTensor;
+		lastAngularSpeed = angularSpeed;
+		lastRotation = rotation;
+
+		//tiempo
+		time += dt;
+
+		//momento linear
+		linearMomentum += force*dt;
+
+
+		//velocidad
+		linearSpeed = linearMomentum / mass;
+
+		//posicion
+		position += linearSpeed*dt;
+
+		//tensor de inercia
+		InertiaTensor = glm::mat3_cast(rotation)*InertiaTensorBody*glm::transpose(glm::mat3_cast(rotation));
+
+		//velocidad angular
+		angularSpeed = InertiaTensor*angularMomentum;
+
+		//orientacion
+		rotation += dt* (1.f / 2)*(glm::quat(0, angularSpeed)*rotation);
+
+		calculateTransformMat();
+
+	
 	}
 
 	void applyColl(float& dt, int& planeNumber, int& pointNumber) {
 		float contDt = dt - findCollTime(dt, planeNumber, pointNumber);
-		
+		actualizeParams();
+		makeImpulse(planeNumber, pointNumber);
 		continueUpdate(contDt);
+		//Update(contDt);
 	}
 
 	void checkWallColl(int& i, int& j, glm::vec3 &normal, float d, float& dt) {
 		if (checkWallRelativeDist(vertex[i], normal, d)!=relativePositions[j][i]) {
 			applyColl(dt, j, i);
 		}
-	
 	}
 	
 	
@@ -328,6 +387,10 @@ public:
 	glm::vec3 originalVertex[8];
 	glm::vec3 vertex[8];
 	glm::vec3 tmpVertex;
+	glm::vec3 objectVelocity;
+	glm::vec3 Impulse;
+	float vRel;
+	float coefficientOfRestitution;
 	float accuracity;
 	float maxNumOfIterations;
 
