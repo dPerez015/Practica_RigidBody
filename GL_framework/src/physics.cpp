@@ -403,7 +403,7 @@ bool firstFrame = 0;
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		//TODO
+		ImGui::DragFloat("LifeTime", &cubo.maxTime, 0.1f, 0,20);
 	}
 
 	// ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
